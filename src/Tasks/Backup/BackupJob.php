@@ -146,9 +146,13 @@ class BackupJob
                 throw InvalidBackupJob::noFilesToBeBackedUp();
             }
 
+            $backupType = empty($this->dbDumpers->count()) ? 'file' : 'database';
+
+
             $zipFile = $this->createZipContainingEveryFileInManifest($manifest);
 
-            $this->copyToBackupDestinations($zipFile);
+
+            $this->copyToBackupDestinations($zipFile, $backupType);
         } catch (Exception $exception) {
             consoleOutput()->error("Backup failed because {$exception->getMessage()}.".PHP_EOL.$exception->getTraceAsString());
 
@@ -253,13 +257,13 @@ class BackupJob
         })->toArray();
     }
 
-    protected function copyToBackupDestinations(string $path)
+    protected function copyToBackupDestinations(string $path, string $type)
     {
-        $this->backupDestinations->each(function (BackupDestination $backupDestination) use ($path) {
+        $this->backupDestinations->each(function (BackupDestination $backupDestination) use ($path, $type) {
             try {
                 consoleOutput()->info("Copying zip to disk named {$backupDestination->diskName()}...");
 
-                $backupDestination->write($path);
+                $backupDestination->write($path, $type);
 
                 consoleOutput()->info("Successfully copied zip to disk named {$backupDestination->diskName()}.");
 
