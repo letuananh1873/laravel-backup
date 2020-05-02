@@ -7,6 +7,8 @@ use Exception;
 use Illuminate\Contracts\Filesystem\Factory;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Spatie\Backup\Exceptions\InvalidBackupDestination;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 
 class BackupDestination
 {
@@ -72,7 +74,7 @@ class BackupDestination
         }
     }
 
-    public function write(string $file)
+    public function write(string $file, string $type)
     {
         if (is_null($this->disk)) {
             throw InvalidBackupDestination::diskNotSet($this->backupName);
@@ -81,6 +83,22 @@ class BackupDestination
         $destination = $this->backupName.'/'.pathinfo($file, PATHINFO_BASENAME);
 
         $handle = fopen($file, 'r+');
+
+        $google = Storage::disk('google');
+        $googleDir = $this->getGoogleFolder( $google, $type);
+
+        $fileName = Carbon::now()->format('Y-m-d-H-i-s').'.zip';
+        //$google->put($name, File::get($file));
+        try {
+            $result = $google->put(
+                $googleDir['path'] . '/'. $fileName,
+                File::get($file)
+            );
+        } catch (\Exception $e) {
+            echo 'Caught exception: ',  $e->getMessage(), "\n";
+        }
+        dd($googleDir);
+
 
         $this->disk->getDriver()->writeStream(
             $destination,
@@ -91,6 +109,7 @@ class BackupDestination
         if (is_resource($handle)) {
             fclose($handle);
         }
+
     }
 
     public function backupName(): string
@@ -170,5 +189,17 @@ class BackupDestination
         $this->backupCollectionCache = null;
 
         return $this;
+    }
+
+
+    private function getGoogleFolder( $google, $story_name ) {
+        $dir = get_google_driver_folder_id( $google, $story_name );
+
+        if ( ! $dir) {
+            $google->makeDirectory( $story_name );
+            $dir = get_google_driver_folder_id( $google, $story_name );
+        }
+
+        return $dir;
     }
 }
