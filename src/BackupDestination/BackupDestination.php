@@ -86,9 +86,8 @@ class BackupDestination
 
         $google = Storage::disk('google');
         $googleDir = $this->getGoogleFolder( $google, $type);
-
         $fileName = Carbon::now()->format('Y-m-d').'.zip';
-        //$google->put($name, File::get($file));
+
         try {
             $result = $google->put(
                 $googleDir['path'] . '/'. $fileName,
