@@ -82,12 +82,12 @@ class BackupDestination
 
         $destination = $this->backupName.'/'.pathinfo($file, PATHINFO_BASENAME);
 
-        $handle = fopen($file, 'r+');
+        // $handle = fopen($file, 'r+');
 
         $google = Storage::disk('google');
         $googleDir = $this->getGoogleFolder( $google, $type);
 
-        $fileName = Carbon::now()->format('Y-m-d-H-i-s').'.zip';
+        $fileName = Carbon::now()->format('Y-m-d').'.zip';
         //$google->put($name, File::get($file));
         try {
             $result = $google->put(
@@ -97,18 +97,16 @@ class BackupDestination
         } catch (\Exception $e) {
             echo 'Caught exception: ',  $e->getMessage(), "\n";
         }
-        dd($googleDir);
 
+        // $this->disk->getDriver()->writeStream(
+        //     $destination,
+        //     $handle,
+        //     $this->getDiskOptions()
+        // );
 
-        $this->disk->getDriver()->writeStream(
-            $destination,
-            $handle,
-            $this->getDiskOptions()
-        );
-
-        if (is_resource($handle)) {
-            fclose($handle);
-        }
+        // if (is_resource($handle)) {
+        //     fclose($handle);
+        // }
 
     }
 
